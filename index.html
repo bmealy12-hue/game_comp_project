@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Compare</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Top navbar -->
+    <nav class="navbar">
+        <span class="logo">🎮 QuestSave</span>
+        <input type="text" placeholder="Search games..." class="search">
+    </nav>
+
+  <!-- Filter bar with dropdowns -->
+<div class="filter-bar">
+
+  <div class="dropdown">
+    <button class="dropdown-btn">
+      Genre: <span class="dropdown-label">All</span>
+      <i class="ti ti-chevron-down"></i>
+    </button>
+    <div class="dropdown-menu">
+      <button class="dropdown-item">All</button>
+      <button class="dropdown-item">Action</button>
+      <button class="dropdown-item">RPG</button>
+      <button class="dropdown-item">Strategy</button>
+      <button class="dropdown-item">Indie</button>
+    </div>
+  </div>
+
+  <select class="sort-select" id="sort-select">
+    <option value="default">Sort: Default</option>
+    <option value="price-low">Sort: Price (Low to High)</option>
+    <option value="price-high">Sort: Price (High to Low)</option>
+    <option value="rating-high">Sort: Rating (High to Low)</option>
+  </select>
+
+  <div class="dropdown">
+    <button class="dropdown-btn">
+      Platform: <span class="dropdown-label">All</span>
+      <i class="ti ti-chevron-down"></i>
+    </button>
+    <div class="dropdown-menu">
+      <button class="dropdown-item">All</button>
+      <button class="dropdown-item">PC</button>
+      <button class="dropdown-item">PlayStation</button>
+      <button class="dropdown-item">Xbox</button>
+      <button class="dropdown-item">Nintendo Switch</button>
+    </div>
+  </div>
+
+</div>
+
+    <!-- Main content area -->
+    <main>
+    <h1>Compare game prices</h1>
+    <p class="subtitle">Find the best deal across Steam, GOG & more</p>
+
+    <!-- Grid of game cards -->
+    <div class="card-grid" id="card-grid">
+      <!-- Cards will be dynamically inserted here by JavaScript -->
+    </div>
+  </main>
+<script src="script.js"></script>
+</body>
+
+<footer class="site-footer">
+  <p>&copy; 2026 GameCompare. Built while learning to code.</p>
+  <div class="footer-links">
+    <a href="#">About</a>
+    <a href="#">GitHub</a>
+    <a href="#">Contact</a>
+  </div>
+</footer>
+</html>

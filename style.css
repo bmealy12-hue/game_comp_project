@@ -1,0 +1,371 @@
+/* ── Reset & base ──────── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f0f1a;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+
+/* ── Navbar ────────────*/
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: #1a1a2e;
+  border-bottom: 1px solid #2a2a4a;
+  position: sticky;
+  top: 0;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #a78bfa;
+}
+
+.search {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #2a2a4a;
+  background: #0f0f1a;
+  color: #e0e0e0;
+  font-size: 14px;
+  width: 260px;
+}
+
+.search:focus {
+  outline: none;
+  border-color: #a78bfa;
+}
+
+/* ── Filter bar ─────────────────────────── */
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 32px;
+  background: #14142a;
+  border-bottom: 1px solid #2a2a4a;
+  position: sticky;
+  top: 64px;
+  z-index: 4;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.filter-bar.hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ── Dropdown wrapper ───────────────────── */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-btn {
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #2a2a4a;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dropdown-btn:hover {
+  border-color: #a78bfa;
+}
+
+.dropdown-label {
+  color: #a78bfa;
+  font-weight: 600;
+}
+
+/* ── The hidden menu ────────────────────── */
+.dropdown-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 8px;
+  min-width: 160px;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.dropdown-menu.open {
+  display: block;
+}
+
+.dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-size: 13px;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dropdown-item:hover {
+  background: #2a2a4a;
+}
+
+/* ── Phones: stack the two dropdowns ────── */
+@media (max-width: 480px) {
+  .filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .dropdown {
+    width: 100%;
+  }
+  .dropdown-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.sort-select {
+  font-size: 13px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #2a2a4a;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+
+
+
+/* ── Main content ──────────────────────── */
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 24px;
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.subtitle {
+  color: #888;
+  margin-bottom: 32px;
+  font-size: 15px;
+}
+
+/* ── Card grid ─────────────────────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+/* ── Individual card ───────────────────── */
+.card {
+  background: #1a1a2e;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #2a2a4a;
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: #a78bfa;
+}
+
+.card img {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  display: block;
+}
+
+.card-body {
+  padding: 16px;
+}
+
+.card-body h2 {
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+/* ── Ratings ───────────────────────────── */
+.rating {
+  color: #f59e0b;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.rating span {
+  color: #888;
+  margin-left: 6px;
+}
+
+/* ── Store price badges ────────────────── */
+
+.price-tag {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  display: inline-block;
+  background: #2a2a35;
+  color: #9b9ba5;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 2px;
+}
+
+.price-best {
+  background: #0d3320;
+  color: #4ade80;
+  font-weight: 600;
+}
+
+.steam {
+  background: #1b2838;
+  color: #66c0f4;
+  border: 1px solid #2a4a6a;
+}
+
+.gog {
+  background: #280040;
+  color: #c06aff;
+  border: 1px solid #4a2a6a;
+}
+
+.epic {
+  background: #000000;
+  color: #ffffff;
+  border: 1px solid #4a4a4a;
+}
+
+.playstation {
+  background: #003791;
+  color: #ffffff;
+  border: 1px solid #2a4a6a;
+}
+
+.genre-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.genre-tag {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: #2a2a4a;
+  color: #a78bfa;
+}
+
+.no-results {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--color-text-secondary, #888);
+  font-size: 14px;
+}
+
+/* ── Best deal label ───────────────────── */
+.best-deal {
+  font-size: 12px;
+  color: #4ade80;
+  font-weight: 500;
+}
+
+/* ── Responsive: tablets and below ─────── */
+@media (max-width: 700px) {
+    .navbar {
+        flex-direction: column; 
+        align-items:flex-start;
+        gap: 12px;
+        padding: 16px, 20px;
+    }
+
+    .search {
+        width: 100%;
+    }
+
+    main {
+        padding :24px 16px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+}
+
+/* ── Responsive: phones ─────────────────── */
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logo {
+    font-size: 17px;
+  }
+}
+
+/* ── Footer ─────────────────────────────── */
+.site-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 24px 32px;
+  margin-top: 40px;
+  border-top: 1px solid #2a2a4a;
+  font-size: 13px;
+  color: #888;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: #a78bfa;
+  text-decoration: none;
+}
+
+.footer-links a:hover {
+  text-decoration: underline;
+}
+
+/* ── Phones: stack footer content ───────── */
+@media (max-width: 480px) {
+  .site-footer {
+    flex-direction: column;
+    text-align: center;
+  }
+}
