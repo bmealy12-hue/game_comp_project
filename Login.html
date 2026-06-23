@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log in</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo" style="text-decoration:none">🎮 GameCompare</a>
+  </nav>
+
+  <main class="auth-page">
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <input type="email" id="email-input" placeholder="Email">
+      <input type="password" id="password-input" placeholder="Password">
+      <button id="login-btn">Log in</button>
+      <button id="signup-btn">Sign up instead</button>
+      <a href="#" id="forgot-link" style="font-size:13px;color:#a78bfa;display:block;margin-top:8px;">Forgot password?</a>
+      <p id="auth-message"></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

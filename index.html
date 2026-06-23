@@ -11,12 +11,13 @@
     <!-- Top navbar -->
     <nav class="navbar">
         <span class="logo">🎮 QuestSave</span>
-        <input type="text" placeholder="Search games..." class="search">
+        <div class="navbar-auth" id="navbar-auth">
+          <a href="login.html" class="navbar-auth-btn" id="navbar-auth-btn">Log in / Sign up</a>
+        </div>
     </nav>
 
   <!-- Filter bar with dropdowns -->
 <div class="filter-bar">
-
   <div class="dropdown">
     <button class="dropdown-btn">
       Genre: <span class="dropdown-label">All</span>
@@ -51,6 +52,8 @@
       <button class="dropdown-item">Nintendo Switch</button>
     </div>
   </div>
+  <input type="text" placeholder="Search games..." class="search">
+
 
 </div>
 
@@ -64,7 +67,9 @@
       <!-- Cards will be dynamically inserted here by JavaScript -->
     </div>
   </main>
-<script src="script.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
 </body>
 
 <footer class="site-footer">

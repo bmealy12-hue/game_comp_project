@@ -1,5 +1,5 @@
 
-const RAWG_KEY = "2e9d3b16cc2c419aba52bf35a163aef3";
+
 
 const searchCache = {};
 
@@ -142,6 +142,7 @@ function createGameCard(game) {
 
   // Build the HTML for the game card
   return `
+  <a href="game.html?id=${game.rawgId}" class="card-link">
     <div class="card">
       <img src="${game.image}" alt="${game.title}">
       <div class="card-body">
@@ -305,4 +306,59 @@ sortSelect.addEventListener("change", () => {
   selectedSort = sortSelect.value;
   applyFilters();
 });
+
+const emailInput = document.querySelector("#email-input");
+const passwordInput = document.querySelector("#password-input");
+const userStatus = document.querySelector("#user-status");
+
+document.querySelector("#signup-btn").addEventListener("click", async () => {
+  const { data, error } = await supabaseClient.auth.signUp({
+    email: emailInput.value,
+    password: passwordInput.value
+  });
+
+  if (error) {
+    alert("Signup failed: " + error.message);
+  } else {
+    alert("Signed up! Check your email to confirm, then log in.");
+  }
+});
+
+document.querySelector("#login-btn").addEventListener("click", async () => {
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: emailInput.value,
+    password: passwordInput.value
+  });
+
+  if (error) {
+    alert("Login failed: " + error.message);
+  } else {
+    userStatus.textContent = `Logged in as ${data.user.email}`;
+  }
+});
+
+async function updateNavbarAuth() {
+  const { data } = await supabaseClient.auth.getUser();
+  const authContainer = document.querySelector("#navbar-auth");
+
+  if (data.user) {
+    const email = data.user.email;
+    const initials = email.slice(0, 2).toUpperCase();
+
+    authContainer.innerHTML = `
+      <div class="user-menu">
+        <div class="user-avatar">${initials}</div>
+        <span class="user-email">${email}</span>
+        <button id="logout-btn">Log out</button>
+      </div>
+    `;
+
+    document.querySelector("#logout-btn").addEventListener("click", async () => {
+      await supabaseClient.auth.signOut();
+      window.location.reload();
+    });
+  }
+}
+
+updateNavbarAuth();
 
