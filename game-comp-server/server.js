@@ -5,7 +5,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const ITAD_KEY = "a2f3ac1d21286671";
+const ITAD_KEY = "4f85f7081a4e48e3326449f29b269588d1cd0ac1";
 
 // Look up an ITAD game ID by title
 app.post("/api/lookup", async (req, res) => {
