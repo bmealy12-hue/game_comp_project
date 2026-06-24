@@ -148,7 +148,7 @@ function createGameCard(game) {
       <div class="card-body">
         <h2>${game.title}</h2>
         <div class="genre-tags">${genreTags}</div>
-        <div class="rating">${stars} <span>${game.rating}/10</span></div>
+        <div class="rating">${stars} <span>${game.rating}/5</span></div>
         <div class="prices">${priceTags}</div>
         <span class="best-deal">Best deal: ${game.bestDeal}</span>
       </div>
