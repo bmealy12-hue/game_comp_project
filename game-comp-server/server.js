@@ -50,6 +50,20 @@ app.post("/api/prices", async (req, res) => {
   res.json(data);
 });
 
+app.post("/api/deals", async (req, res) => {
+  const url = `https://api.isthereanydeal.com/deals/v2?key=${ITAD_KEY}&country=GB&limit=6&sort=-cut`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    console.error("Error fetching ITAD deals:", error);
+    res.status(500).json({ error: "Failed to fetch deals" });
+  }
+});
+
+
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
+

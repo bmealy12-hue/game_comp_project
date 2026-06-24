@@ -61,7 +61,16 @@
     <main>
     <h1>Compare game prices</h1>
     <p class="subtitle">Find the best deal across Steam, GOG & more</p>
-
+      <section class="discovery-section">
+        <div class="discovery-tabs">
+          <button class="discovery-tab active" data-tab="hot">Hot picks</button>
+          <button class="discovery-tab" data-tab="deals">Special deals</button>
+          <button class="discovery-tab" data-tab="top-rated">Top rated</button>
+        </div>
+        <div class="card-grid" id="discovery-grid">
+          <p>Loading...</p>
+        </div>
+      </section>
     <!-- Grid of game cards -->
     <div class="card-grid" id="card-grid">
       <!-- Cards will be dynamically inserted here by JavaScript -->

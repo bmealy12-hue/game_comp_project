@@ -514,3 +514,38 @@ h1 {
   color: #f59e0b;
   margin-top: 8px;
 }
+
+.hot-picks {
+  margin-bottom: 40px;
+}
+
+.hot-picks h2 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+
+.discovery-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.discovery-tab {
+  font-size: 13px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid #2a2a4a;
+  background: #1a1a2e;
+  color: #888;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.discovery-tab.active {
+  background: #a78bfa;
+  color: #1a0f3d;
+  font-weight: 600;
+  border-color: #a78bfa;
+}

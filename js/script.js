@@ -161,11 +161,15 @@ function renderGames(gameList) {
   const grid = document.querySelector("#card-grid");
 
   if (gameList.length === 0) {
-    grid.innerHTML = `
-      <p class="no-results">
-        No results found. Try a different search or adjust your filters.
-      </p>
-    `;
+    if (searchText.trim() === "") {
+      grid.innerHTML = "";
+    } else {
+      grid.innerHTML = `
+        <p class="no-results">
+          No results found. Try a different search or adjust your filters.
+        </p>
+      `;
+    }
     return;
   }
 
@@ -175,7 +179,65 @@ function renderGames(gameList) {
 }
 
 // run it once the page has loaded
+async function fetchHotPicks() {
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-added&dates=2025-01-01,2026-12-31&page_size=6`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return Promise.all(data.results.map(game => formatGame(game)));
+}
+
+async function fetchTopRated() {
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-rating&page_size=6`;
+  const response = await fetch(url);
+  const data = await response.json();
+  return Promise.all(data.results.map(game => formatGame(game)));
+}
+
+async function fetchSpecialDeals() {
+  const response = await fetch("http://localhost:3000/api/deals", {
+    method: "POST"
+  });
+  const data = await response.json();
+
+  return data.list.map(deal => ({
+    title: deal.title,
+    image: deal.assets?.boxart || deal.assets?.banner145 || "https://placehold.co/300x160/1a1a2e/ffffff?text=No+Image",
+    rating: "N/A",
+    genres: [],
+    platforms: [],
+    prices: [
+      { store: deal.deal.shop.name, price: `£${deal.deal.price.amount.toFixed(2)}` },
+      { store: "Was", price: `£${deal.deal.regular.amount.toFixed(2)}` }
+    ],
+    bestDeal: `${deal.deal.cut}% off`,
+    rawgId: null
+  }));
+}
+
 renderGames([]);
+
+
+async function loadDiscoverySection(tab) {
+  const grid = document.querySelector("#discovery-grid");
+  grid.innerHTML = "<p>Loading...</p>";
+
+  let games;
+  if (tab === "hot") games = await fetchHotPicks();
+  else if (tab === "deals") games = await fetchSpecialDeals();
+  else if (tab === "top-rated") games = await fetchTopRated();
+
+  grid.innerHTML = games.map(createGameCard).join("");
+}
+
+document.querySelectorAll(".discovery-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".discovery-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    loadDiscoverySection(tab.dataset.tab);
+  });
+});
+
+loadDiscoverySection("hot");
 
 
 // Apply the selected filters and sorting to the current results
@@ -224,6 +286,20 @@ function cleanSearchTerm(text) {
     .toLowerCase()
     .replace(/[-_]/g, " ")
     .trim();
+}
+
+//hot picks
+async function fetchHotPicks() {
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&dates=2024-01-01,2026-12-31&ordering=-rating&page_size=6`;
+
+  const response = await fetch(url);
+  const data = await response.json();
+
+  const formattedGames = await Promise.all(
+    data.results.map(game => formatGame(game))
+  );
+
+  return formattedGames;
 }
 
 
@@ -278,12 +354,16 @@ if (!searchInput) {
 
 const performSearch = debounce(async () => {
   searchText = searchInput.value;
+  const hotPicksSection = document.querySelector(".hot-picks");
 
   if (searchText.trim() === "") {
     currentResults = [];
     renderGames([]);
+    hotPicksSection.style.display = "block";
     return;
   }
+
+  hotPicksSection.style.display = "none";
 
   const grid = document.querySelector("#card-grid");
   grid.innerHTML = "<p>Loading...</p>";
