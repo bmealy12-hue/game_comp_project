@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Set up your profile</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo" style="text-decoration:none">🎮 QuestSave</a>
+  </nav>
+
+  <main class="auth-page">
+    <div class="auth-card profile-setup-card">
+      <h1>Set up your profile</h1>
+      <p class="profile-setup-sub">Pick a username and an avatar to get started</p>
+
+      <label class="profile-setup-label" for="username-input">Username</label>
+      <input type="text" id="username-input" placeholder="e.g. shadowgamer42">
+      <label class="profile-setup-label">Choose an avatar</label>
+      <div id="avatar-grid" class="avatar-grid"></div>
+
+      <button id="save-profile-btn">Continue</button>
+      <p id="profile-message"></p>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/config.js"></script>
+  <script src="js/profile-setup.js"></script>
+</body>
+</html>

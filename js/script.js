@@ -1,6 +1,3 @@
-
-
-
 const searchCache = {};
 
 async function lookupGameId(title) {
@@ -11,7 +8,6 @@ async function lookupGameId(title) {
       body: JSON.stringify({ title })
     });
     const data = await response.json();
-    console.log("looking up:", title, "> got back:", data);
     return data.id || null;
   } catch (error) {
     console.error("Price server unreachable:", error);
@@ -43,7 +39,6 @@ async function fetchPrices(itadId) {
       body: JSON.stringify({ itadId })
     });
     const data = await response.json();
-    console.log("Price data received:", data);
 
     const deals = Array.isArray(data)
       ? data[0]?.deals
@@ -124,7 +119,9 @@ function createGameCard(game) {
   const lowestPrice = getLowestPrice(game);
 
   // Build the price tags, highlighting the lowest price
-  const priceTags = game.prices
+  const priceTags = [...game.prices]
+    .sort((a, b) => parsePriceNumber(a.price) - parsePriceNumber(b.price))
+    .slice(0, 3)
     .map(p => {
       const numericPrice = parsePriceNumber(p.price);
       const isLowest = numericPrice !== null && numericPrice === lowestPrice;
@@ -138,7 +135,7 @@ function createGameCard(game) {
     .map(g => `<span class="genre-tag">${g}</span>`)
     .join("");
 
-  const stars = "★".repeat(Math.round(game.rating / 2));
+  const stars = "★".repeat(Math.round(game.rating / 1));
 
   // Build the HTML for the game card
   return `
@@ -153,6 +150,7 @@ function createGameCard(game) {
         <span class="best-deal">Best deal: ${game.bestDeal}</span>
       </div>
     </div>
+  </a>
   `;
 }
 
@@ -178,40 +176,72 @@ function renderGames(gameList) {
   grid.innerHTML = allCardsHTML;
 }
 
-// run it once the page has loaded
 async function fetchHotPicks() {
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-added&dates=2025-01-01,2026-12-31&page_size=6`;
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-added&dates=2025-01-01,2026-12-31&page_size=12`;
   const response = await fetch(url);
   const data = await response.json();
   return Promise.all(data.results.map(game => formatGame(game)));
 }
 
 async function fetchTopRated() {
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-rating&page_size=6`;
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-rating&page_size=12`;
   const response = await fetch(url);
   const data = await response.json();
   return Promise.all(data.results.map(game => formatGame(game)));
 }
 
-async function fetchSpecialDeals() {
-  const response = await fetch("http://localhost:3000/api/deals", {
-    method: "POST"
-  });
+// Upcoming games have no real price yet, so this skips the ITAD lookup/price
+// pipeline entirely (it would just waste 2 network calls per game for nothing)
+// and builds the card shape directly with a placeholder price.
+async function fetchUpcomingGames() {
+  const today = new Date().toISOString().split("T")[0];
+  const oneYearOut = new Date();
+  oneYearOut.setFullYear(oneYearOut.getFullYear() + 1);
+  const futureDate = oneYearOut.toISOString().split("T")[0];
+
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&dates=${today},${futureDate}&ordering=-added&page_size=12`;
+  const response = await fetch(url);
   const data = await response.json();
 
-  return data.list.map(deal => ({
-    title: deal.title,
-    image: deal.assets?.boxart || deal.assets?.banner145 || "https://placehold.co/300x160/1a1a2e/ffffff?text=No+Image",
-    rating: "N/A",
-    genres: [],
-    platforms: [],
-    prices: [
-      { store: deal.deal.shop.name, price: `£${deal.deal.price.amount.toFixed(2)}` },
-      { store: "Was", price: `£${deal.deal.regular.amount.toFixed(2)}` }
-    ],
-    bestDeal: `${deal.deal.cut}% off`,
-    rawgId: null
+  return data.results.map(rawgGame => ({
+    title: rawgGame.name,
+    image: rawgGame.background_image || "https://placehold.co/300x160/1a1a2e/ffffff?text=No+Image",
+    rating: rawgGame.rating ? rawgGame.rating.toFixed(1) : "N/A",
+    genres: rawgGame.genres.map(g => g.name),
+    platforms: rawgGame.platforms ? rawgGame.platforms.map(p => p.platform.name) : [],
+    prices: [{ store: "Releases", price: rawgGame.released || "TBA" }],
+    bestDeal: "Not yet released",
+    rawgId: rawgGame.id
   }));
+}
+
+// Filtering for non-game deals (DLC, certifications, training courses, etc.)
+// now happens server-side in /api/deals, which pages through ITAD's results
+// until it has 12 real games - so this just formats what comes back.
+async function fetchSpecialDeals() {
+  try {
+    const response = await fetch("http://localhost:3000/api/deals", {
+      method: "POST"
+    });
+    const data = await response.json();
+
+    return data.list.map(deal => ({
+      title: deal.title,
+      image: deal.assets?.boxart || deal.assets?.banner145 || "https://placehold.co/300x160/1a1a2e/ffffff?text=No+Image",
+      rating: "N/A",
+      genres: [],
+      platforms: [],
+      prices: [
+        { store: deal.deal.shop.name, price: `£${deal.deal.price.amount.toFixed(2)}` },
+        { store: "Was", price: `£${deal.deal.regular.amount.toFixed(2)}` }
+      ],
+      bestDeal: `${deal.deal.cut}% off`,
+      rawgId: null
+    }));
+  } catch (error) {
+    console.error("Special deals fetch failed:", error);
+    return [];
+  }
 }
 
 renderGames([]);
@@ -225,6 +255,7 @@ async function loadDiscoverySection(tab) {
   if (tab === "hot") games = await fetchHotPicks();
   else if (tab === "deals") games = await fetchSpecialDeals();
   else if (tab === "top-rated") games = await fetchTopRated();
+  else if (tab === "upcoming") games = await fetchUpcomingGames();
 
   grid.innerHTML = games.map(createGameCard).join("");
 }
@@ -288,22 +319,6 @@ function cleanSearchTerm(text) {
     .trim();
 }
 
-//hot picks
-async function fetchHotPicks() {
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&dates=2024-01-01,2026-12-31&ordering=-rating&page_size=6`;
-
-  const response = await fetch(url);
-  const data = await response.json();
-
-  const formattedGames = await Promise.all(
-    data.results.map(game => formatGame(game))
-  );
-
-  return formattedGames;
-}
-
-
-
 // Find every dropdown button on the page
 document.querySelectorAll('.dropdown-btn').forEach(btn => {
 
@@ -354,16 +369,16 @@ if (!searchInput) {
 
 const performSearch = debounce(async () => {
   searchText = searchInput.value;
-  const hotPicksSection = document.querySelector(".hot-picks");
+  const discoverySection = document.querySelector(".discovery-section");
 
   if (searchText.trim() === "") {
     currentResults = [];
     renderGames([]);
-    hotPicksSection.style.display = "block";
+    discoverySection.style.display = "block";
     return;
   }
 
-  hotPicksSection.style.display = "none";
+  discoverySection.style.display = "none";
 
   const grid = document.querySelector("#card-grid");
   grid.innerHTML = "<p>Loading...</p>";
@@ -411,4 +426,3 @@ async function updateNavbarAuth() {
 }
 
 updateNavbarAuth();
-

@@ -50,12 +50,55 @@ app.post("/api/prices", async (req, res) => {
   res.json(data);
 });
 
+// Keywords that signal a deal isn't an actual video game.
+// ITAD's deals feed includes software, training, and certification
+// products alongside games - there's no clean field to separate them,
+// so this is a pragmatic text-match filter we expand as new junk appears.
+const NON_GAME_KEYWORDS = [
+  "soundtrack", "ost", "dlc", "season pass", "expansion pass",
+  "artbook", "art book", "demo", "playtest", "upgrade",
+  "deluxe edition upgrade", "digital extras", "bonus content",
+  "wallpaper", "cosmetic", "skin pack", "currency pack",
+  "certificate", "certification", "exam", "course", "training",
+  "tutorial", "aws", "azure", "comptia", "cisco", "microsoft office",
+  "software license", "license key", "voucher", "gift card",
+  "subscription", "vpn", "antivirus", "online tutor", "programming",
+  "coding bootcamp", "masterclass", "e-learning", "elearning",
+  "udemy", "coursera","tutoral", "skillshare", "linkedin learning", "pluralsight",
+  "photoshop", "illustrator", "after effects", "premiere pro", "linux", "mobile app",
+  "Deluxe", "bundle"
+];
+
+function isLikelyNotAGame(title) {
+  const lowerTitle = title.toLowerCase();
+  return NON_GAME_KEYWORDS.some(keyword => lowerTitle.includes(keyword));
+}
+
 app.post("/api/deals", async (req, res) => {
-  const url = `https://api.isthereanydeal.com/deals/v2?key=${ITAD_KEY}&country=GB&limit=6&sort=-cut`;
+  const desiredCount = 12;
+  const realGames = [];
+  let offset = 0;
+  const pageSize = 30;
+  const maxPages = 5; // safety cap so a bad day on ITAD's end can't loop forever
+
   try {
-    const response = await fetch(url);
-    const data = await response.json();
-    res.json(data);
+    for (let page = 0; page < maxPages; page++) {
+      const url = `https://api.isthereanydeal.com/deals/v2?key=${ITAD_KEY}&country=GB&limit=${pageSize}&offset=${offset}&sort=-cut`;
+      const response = await fetch(url);
+      const data = await response.json();
+
+      const batch = data.list || [];
+      if (batch.length === 0) break; // ITAD has nothing left to give us
+
+      const filtered = batch.filter(deal => !isLikelyNotAGame(deal.title));
+      realGames.push(...filtered);
+
+      if (realGames.length >= desiredCount) break;
+
+      offset += pageSize;
+    }
+
+    res.json({ list: realGames.slice(0, desiredCount) });
   } catch (error) {
     console.error("Error fetching ITAD deals:", error);
     res.status(500).json({ error: "Failed to fetch deals" });
@@ -66,4 +109,3 @@ app.post("/api/deals", async (req, res) => {
 app.listen(3000, () => {
   console.log("Server running on http://localhost:3000");
 });
-
