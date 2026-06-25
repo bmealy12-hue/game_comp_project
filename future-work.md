@@ -1,0 +1,4 @@
+- Wishlist system
+- Price alerts
+- Historical price tracking
+- Additional store integrations
