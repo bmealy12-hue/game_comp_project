@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings - QuestSave</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <a href="index.html" class="logo" style="text-decoration:none">🎮 QuestSave</a>
+  </nav>
+
+  <main class="auth-page">
+    <div class="auth-card settings-card">
+      <h1>Settings</h1>
+
+      <div class="settings-row">
+        <div>
+          <p class="settings-label">Light mode</p>
+          <p class="settings-sub">Switch between dark and light theme</p>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="theme-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <p class="settings-label">Show ratings</p>
+          <p class="settings-sub">Display star ratings on game cards</p>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="ratings-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <p class="settings-label">Compact view</p>
+          <p class="settings-sub">Show more games in a denser grid layout</p>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="compact-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <a href="index.html" style="font-size:13px;color:#a78bfa;display:block;margin-top:20px;text-align:center;">← Back to home</a>
+    </div>
+  </main>
+
+  <script src="js/theme.js"></script>
+  <script src="js/settings.js"></script>
+</body>
+</html>

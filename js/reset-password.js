@@ -8,6 +8,6 @@ document.querySelector("#update-password-btn").addEventListener("click", async (
     messageBox.textContent = "Error: " + error.message;
   } else {
     messageBox.textContent = "Password updated! Redirecting...";
-    setTimeout(() => window.location.href = "login.html", 1500);
+    setTimeout(() => window.location.href = "Login.html", 1500);
   }
 });

@@ -30,7 +30,8 @@ async function fetchPrices(itadId) {
 
     return deals.map(deal => ({
       store: deal.shop?.name || deal.store || "Unknown store",
-      price: `£${Number(deal.price?.amount ?? deal.price ?? 0).toFixed(2)}`
+      price: `£${Number(deal.price?.amount ?? deal.price ?? 0).toFixed(2)}`,
+      url: deal.url || null
     }));
   } catch (error) {
     console.error("Price fetch failed:", error);
@@ -71,12 +72,12 @@ function renderGameDetail(game, prices) {
   });
 
   const priceRows = sortedPrices
-    .map(p => `
-      <div class="detail-price-row">
-        <span>${p.store}</span>
-        <span>${p.price}</span>
-      </div>
-    `)
+    .map(p => {
+      const inner = `<span>${p.store}</span><span class="detail-price-amount">${p.price}</span>`;
+      return p.url
+        ? `<a href="${p.url}" target="_blank" rel="noopener noreferrer" class="detail-price-row detail-price-link">${inner}</a>`
+        : `<div class="detail-price-row">${inner}</div>`;
+    })
     .join("");
 
   container.innerHTML = `

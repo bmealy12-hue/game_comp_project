@@ -3,15 +3,22 @@ const passwordInput = document.querySelector("#password-input");
 const messageBox = document.querySelector("#auth-message");
 
 document.querySelector("#signup-btn").addEventListener("click", async () => {
-  const { data, error } = await supabaseClient.auth.signUp({
-    email: emailInput.value,
-    password: passwordInput.value
-  });
+  const email = emailInput.value;
+  const password = passwordInput.value;
 
-  if (error) {
-    messageBox.textContent = "Signup failed: " + error.message;
+  const { error: signUpError } = await supabaseClient.auth.signUp({ email, password });
+
+  if (signUpError) {
+    messageBox.textContent = "Signup failed: " + signUpError.message;
+    return;
+  }
+
+  const { error: loginError } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+  if (loginError) {
+    messageBox.textContent = "Account created! Please confirm your email then log in.";
   } else {
-    messageBox.textContent = "Signed up! Check your email to confirm, then log in.";
+    window.location.href = "profile-setup.html";
   }
 });
 
@@ -24,7 +31,13 @@ document.querySelector("#login-btn").addEventListener("click", async () => {
   if (error) {
     messageBox.textContent = "Login failed: " + error.message;
   } else {
-    window.location.href = "index.html";
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("id")
+      .eq("id", data.user.id)
+      .single();
+
+    window.location.href = profile ? "index.html" : "profile-setup.html";
   }
 });
 

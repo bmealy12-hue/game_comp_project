@@ -1,5 +1,26 @@
 const searchCache = {};
 
+const genreSlugs = {
+  "Action":   "action",
+  "RPG":      "role-playing-games-rpg",
+  "Strategy": "strategy",
+  "Indie":    "indie"
+};
+
+const platformIds = {
+  "PC":               "4",
+  "PlayStation":      "18,187",
+  "Xbox":             "1,186",
+  "Nintendo Switch":  "7"
+};
+
+function applyRawgFilters(url, genre, platform) {
+  const u = new URL(url);
+  if (genre !== "All" && genreSlugs[genre])   u.searchParams.set("genres",    genreSlugs[genre]);
+  if (platform !== "All" && platformIds[platform]) u.searchParams.set("platforms", platformIds[platform]);
+  return u.toString();
+}
+
 async function lookupGameId(title) {
   try {
     const response = await fetch("http://localhost:3000/api/lookup", {
@@ -59,12 +80,16 @@ async function fetchPrices(itadId) {
 }
 
 
+function pageSize() {
+  return localStorage.getItem("compactView") === "true" ? 15 : 12;
+}
+
 async function fetchGames(searchTerm) {
   if (searchCache[searchTerm]) {
     return searchCache[searchTerm];
   }
 
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${searchTerm}&page_size=12`;
+  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${searchTerm}&page_size=${pageSize()}`;
 
   const response = await fetch(url);
   const data = await response.json();
@@ -111,7 +136,9 @@ let selectedGenre = "All";
 let selectedPlatform = "All";
 let searchText = "";
 let selectedSort = "default";
+let currentTab = "hot";
 let currentResults = [];
+let currentDiscoveryResults = [];
 
 
 // Render the game cards in the grid
@@ -136,6 +163,7 @@ function createGameCard(game) {
     .join("");
 
   const stars = "★".repeat(Math.round(game.rating / 1));
+  const showRatings = localStorage.getItem("showRatings") !== "false";
 
   // Build the HTML for the game card
   return `
@@ -145,7 +173,7 @@ function createGameCard(game) {
       <div class="card-body">
         <h2>${game.title}</h2>
         <div class="genre-tags">${genreTags}</div>
-        <div class="rating">${stars} <span>${game.rating}/5</span></div>
+        ${showRatings ? `<div class="rating">${stars} <span>${game.rating}/5</span></div>` : ""}
         <div class="prices">${priceTags}</div>
         <span class="best-deal">Best deal: ${game.bestDeal}</span>
       </div>
@@ -176,15 +204,21 @@ function renderGames(gameList) {
   grid.innerHTML = allCardsHTML;
 }
 
-async function fetchHotPicks() {
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-added&dates=2025-01-01,2026-12-31&page_size=12`;
+async function fetchHotPicks(genre = "All", platform = "All") {
+  const url = applyRawgFilters(
+    `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-added&dates=2025-01-01,2026-12-31&page_size=${pageSize()}`,
+    genre, platform
+  );
   const response = await fetch(url);
   const data = await response.json();
   return Promise.all(data.results.map(game => formatGame(game)));
 }
 
-async function fetchTopRated() {
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-rating&page_size=12`;
+async function fetchTopRated(genre = "All", platform = "All") {
+  const url = applyRawgFilters(
+    `https://api.rawg.io/api/games?key=${RAWG_KEY}&ordering=-rating&page_size=${pageSize()}`,
+    genre, platform
+  );
   const response = await fetch(url);
   const data = await response.json();
   return Promise.all(data.results.map(game => formatGame(game)));
@@ -193,13 +227,16 @@ async function fetchTopRated() {
 // Upcoming games have no real price yet, so this skips the ITAD lookup/price
 // pipeline entirely (it would just waste 2 network calls per game for nothing)
 // and builds the card shape directly with a placeholder price.
-async function fetchUpcomingGames() {
+async function fetchUpcomingGames(genre = "All", platform = "All") {
   const today = new Date().toISOString().split("T")[0];
   const oneYearOut = new Date();
   oneYearOut.setFullYear(oneYearOut.getFullYear() + 1);
   const futureDate = oneYearOut.toISOString().split("T")[0];
 
-  const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&dates=${today},${futureDate}&ordering=-added&page_size=12`;
+  const url = applyRawgFilters(
+    `https://api.rawg.io/api/games?key=${RAWG_KEY}&dates=${today},${futureDate}&ordering=-added&page_size=${pageSize()}`,
+    genre, platform
+  );
   const response = await fetch(url);
   const data = await response.json();
 
@@ -215,13 +252,46 @@ async function fetchUpcomingGames() {
   }));
 }
 
+// When the deals tab has an active genre/platform filter, start from the ITAD
+// deals feed (which always has real prices), then enrich each deal with a
+// RAWG search to get genre/platform data, then filter. This guarantees prices
+// are always present — unlike going RAWG-first and hoping ITAD has an entry.
+async function fetchDealsWithGenreFilter(genre, platform) {
+  const deals = await fetchSpecialDeals(48);
+
+  const enriched = await Promise.all(deals.map(async deal => {
+    try {
+      const url = `https://api.rawg.io/api/games?key=${RAWG_KEY}&search=${encodeURIComponent(deal.title)}&page_size=1`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const match = data.results?.[0];
+      return {
+        ...deal,
+        genres:    match?.genres?.map(g => g.name)             ?? [],
+        platforms: match?.platforms?.map(p => p.platform.name) ?? []
+      };
+    } catch {
+      return deal;
+    }
+  }));
+
+  let filtered = enriched;
+  if (genre    !== "All") filtered = filtered.filter(d => d.genres.includes(genre));
+  if (platform !== "All") filtered = filtered.filter(d => d.platforms.some(p => p.includes(platform)));
+
+  const results = filtered.length > 0 ? filtered : deals;
+  return results.slice(0, pageSize());
+}
+
 // Filtering for non-game deals (DLC, certifications, training courses, etc.)
 // now happens server-side in /api/deals, which pages through ITAD's results
 // until it has 12 real games - so this just formats what comes back.
-async function fetchSpecialDeals() {
+async function fetchSpecialDeals(count = 12) {
   try {
     const response = await fetch("http://localhost:3000/api/deals", {
-      method: "POST"
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ count })
     });
     const data = await response.json();
 
@@ -250,14 +320,29 @@ renderGames([]);
 async function loadDiscoverySection(tab) {
   const grid = document.querySelector("#discovery-grid");
   grid.innerHTML = "<p>Loading...</p>";
+  currentTab = tab;
 
-  let games;
-  if (tab === "hot") games = await fetchHotPicks();
-  else if (tab === "deals") games = await fetchSpecialDeals();
-  else if (tab === "top-rated") games = await fetchTopRated();
-  else if (tab === "upcoming") games = await fetchUpcomingGames();
+  const g = selectedGenre;
+  const p = selectedPlatform;
 
-  grid.innerHTML = games.map(createGameCard).join("");
+  try {
+    let games;
+
+    if (tab === "hot")             games = await fetchHotPicks(g, p);
+    else if (tab === "top-rated")  games = await fetchTopRated(g, p);
+    else if (tab === "upcoming")   games = await fetchUpcomingGames(g, p);
+    else if (tab === "deals") {
+      games = (g !== "All" || p !== "All")
+        ? await fetchDealsWithGenreFilter(g, p)
+        : await fetchSpecialDeals();
+    }
+
+    currentDiscoveryResults = games || [];
+    applyFilters();
+  } catch (err) {
+    console.error("Failed to load section:", err);
+    grid.innerHTML = "<p class='no-results'>Failed to load games. Try refreshing.</p>";
+  }
 }
 
 document.querySelectorAll(".discovery-tab").forEach(tab => {
@@ -271,27 +356,20 @@ document.querySelectorAll(".discovery-tab").forEach(tab => {
 loadDiscoverySection("hot");
 
 
-// Apply the selected filters and sorting to the current results
-function applyFilters() {
-  let filtered = currentResults;
+function filterAndSort(games) {
+  let filtered = games;
 
   if (selectedGenre !== "All") {
     filtered = filtered.filter(game => game.genres.includes(selectedGenre));
   }
 
   if (selectedPlatform !== "All") {
-  filtered = filtered.filter(game =>
-    game.platforms.some(p => p.includes(selectedPlatform))
-  );
-}
-
-  if (searchText !== "") {
     filtered = filtered.filter(game =>
-      game.title.toLowerCase().includes(searchText.toLowerCase())
+      game.platforms.some(p => p.includes(selectedPlatform))
     );
   }
 
-  let sorted = [...filtered]; // Create a copy for sorting
+  let sorted = [...filtered];
 
   if (selectedSort === "price-low") {
     sorted.sort((a, b) => getLowestPrice(a) - getLowestPrice(b));
@@ -301,7 +379,25 @@ function applyFilters() {
     sorted.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
   }
 
-  renderGames(sorted);
+  return sorted;
+}
+
+function applyFilters() {
+  if (searchText.trim() !== "") {
+    const textFiltered = currentResults.filter(game =>
+      game.title.toLowerCase().includes(searchText.toLowerCase())
+    );
+    renderGames(filterAndSort(textFiltered));
+  } else {
+    const sorted = filterAndSort(currentDiscoveryResults);
+    const grid = document.querySelector("#discovery-grid");
+    const filtersActive = selectedGenre !== "All" || selectedPlatform !== "All";
+    grid.innerHTML = sorted.length
+      ? sorted.map(createGameCard).join("")
+      : filtersActive
+        ? "<p class='no-results'>No games match your filters.</p>"
+        : "<p class='no-results'>Failed to load games. Try refreshing.</p>";
+  }
 }
 
 function getLowestPrice(game) {
@@ -356,7 +452,13 @@ document.querySelectorAll('.dropdown-item').forEach(item => {
       selectedPlatform = item.textContent;
     }
 
-    applyFilters();
+    // Genre/platform change: re-fetch from API with the new filter applied.
+    // Sort stays client-side so no re-fetch needed there.
+    if (searchText.trim() !== "") {
+      applyFilters();
+    } else {
+      loadDiscoverySection(currentTab);
+    }
   });
 });
 
@@ -375,6 +477,7 @@ const performSearch = debounce(async () => {
     currentResults = [];
     renderGames([]);
     discoverySection.style.display = "block";
+    applyFilters();
     return;
   }
 
@@ -407,16 +510,39 @@ async function updateNavbarAuth() {
   const authContainer = document.querySelector("#navbar-auth");
 
   if (data.user) {
-    const email = data.user.email;
-    const initials = email.slice(0, 2).toUpperCase();
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("username, avatar")
+      .eq("id", data.user.id)
+      .single();
+
+    const displayAvatar = profile?.avatar ?? "👤";
+    const displayName = profile?.username ?? data.user.email;
 
     authContainer.innerHTML = `
       <div class="user-menu">
-        <div class="user-avatar">${initials}</div>
-        <span class="user-email">${email}</span>
-        <button id="logout-btn">Log out</button>
+        <button class="user-menu-trigger" id="user-menu-trigger">
+          <span class="user-avatar">${displayAvatar}</span>
+          <span class="user-name">${displayName}</span>
+          <span class="menu-caret">▾</span>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <a href="account.html" class="user-dropdown-item">Account</a>
+          <a href="settings.html" class="user-dropdown-item">Settings</a>
+          <button class="user-dropdown-item user-dropdown-danger" id="logout-btn">Log out</button>
+        </div>
       </div>
     `;
+
+    document.querySelector("#user-menu-trigger").addEventListener("click", (e) => {
+      e.stopPropagation();
+      document.querySelector("#user-dropdown").classList.toggle("open");
+    });
+
+    document.addEventListener("click", () => {
+      const dropdown = document.querySelector("#user-dropdown");
+      if (dropdown) dropdown.classList.remove("open");
+    });
 
     document.querySelector("#logout-btn").addEventListener("click", async () => {
       await supabaseClient.auth.signOut();
@@ -425,4 +551,11 @@ async function updateNavbarAuth() {
   }
 }
 
+function applyPageSettings() {
+  if (localStorage.getItem("compactView") === "true") {
+    document.querySelectorAll(".card-grid").forEach(g => g.classList.add("compact-grid"));
+  }
+}
+
 updateNavbarAuth();
+applyPageSettings();

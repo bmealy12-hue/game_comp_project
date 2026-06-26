@@ -5,6 +5,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get("/api/health", (req, res) => res.json({ ok: true }));
+
 const ITAD_KEY = "4f85f7081a4e48e3326449f29b269588d1cd0ac1";
 
 // Look up an ITAD game ID by title
@@ -75,7 +77,7 @@ function isLikelyNotAGame(title) {
 }
 
 app.post("/api/deals", async (req, res) => {
-  const desiredCount = 12;
+  const desiredCount = Math.min(req.body?.count || 12, 60);
   const realGames = [];
   let offset = 0;
   const pageSize = 30;

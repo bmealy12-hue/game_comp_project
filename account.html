@@ -3,33 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Set up your profile</title>
+  <title>Account - QuestSave</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
   <nav class="navbar">
     <a href="index.html" class="logo" style="text-decoration:none">🎮 QuestSave</a>
+
   </nav>
 
   <main class="auth-page">
     <div class="auth-card profile-setup-card">
-      <h1>Set up your profile</h1>
-      <p class="profile-setup-sub">Pick a username and an avatar to get started</p>
+      <h1>Your Account</h1>
+      <p class="profile-setup-sub">Update your username and avatar</p>
 
       <label class="profile-setup-label" for="username-input">Username</label>
       <input type="text" id="username-input" placeholder="e.g. shadowgamer42">
+
       <label class="profile-setup-label">Choose an avatar</label>
       <div id="avatar-grid" class="avatar-grid"></div>
 
-      <button id="save-profile-btn">Continue</button>
+      <button id="save-profile-btn">Save changes</button>
       <p id="profile-message"></p>
+      <a href="index.html" style="font-size:13px;color:#a78bfa;display:block;margin-top:8px;text-align:center;">← Back to home</a>
     </div>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/config.js"></script>
   <script src="js/theme.js"></script>
-  <script src="js/profile-setup.js"></script>
+  <script src="js/account.js"></script>
 </body>
 </html>
